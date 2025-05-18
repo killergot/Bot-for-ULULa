@@ -8,7 +8,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from functools import lru_cache
 
 from app.api import ApiClient
-from app.lexicon.lexicon import LEXICON_RU
+from app.lexicon.lexicon import LEXICON_RU, LEXICON_COMMANDS_RU
 from app.keyboard.keyboard import kb_main
 from app.repositoryes.user_repository import UserRepository
 router = Router()
@@ -71,6 +71,65 @@ class LoginStates(StatesGroup):
     email = State()
     password = State()
     code = State()
+
+def format_help(commands):
+    formatted = "✔ *Список команд:*\n"
+    for i, lesson in commands.items():
+        formatted += (
+            f"\n*{i}* : {lesson}"
+        )
+    return formatted
+
+def format_tasks(tasks):
+    if not tasks:
+        return "📭 У вас пока нет задач."
+
+    formatted = "📝 *Список задач:*\n"
+
+    for i, task in enumerate(tasks, start=1):
+        flag = task["task_flag"]
+        description = task["description"]
+        deadline = task["deadline"]
+
+        # Определяем значок
+        if flag & 1 and flag & 2:
+            status = "🔥✅"  # важный и выполненный
+        elif flag & 1:
+            status = "❗"    # важный, но не выполненный
+        elif flag & 2:
+            status = "✅"    # выполненный
+        else:
+            status = "⏳"    # обычный
+
+        formatted += (
+            f"\n*{i}. {description}* {status}\n"
+            f"📅 Дедлайн: `{deadline}`\n"
+        )
+
+    return formatted
+
+@router.message(Command("help"))
+async def login_handler(message: Message):
+    await message.answer(text=format_help(LEXICON_COMMANDS_RU),
+                         parse_mode="Markdown")
+    await message.delete()
+
+@router.message(Command("tasks"))
+async def login_handler(message: Message, db_session: AsyncSession):
+    client = ApiClient(
+        telegram_id=message.from_user.id,
+        session=db_session,
+    )
+    try:
+        resp = await client.get("/tasks/get_tasks_for_me")
+        profile = resp.json()
+        await message.answer(format_tasks(profile),
+                             parse_mode="Markdown")
+        await message.delete()
+    except Exception as e:
+        await message.answer("Ошибка при получении профиля.")
+
+
 
 
 @router.message(Command("login"))

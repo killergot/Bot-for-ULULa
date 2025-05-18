@@ -24,6 +24,11 @@ class UserRepository(TemplateRepository):
     async def get(self, user_id: int):
         return await self.db.get(User, user_id)
 
+    async def get_with_tokens(self):
+        data = select(User).where(User.access_token != None)
+        users = await self.db.execute(data)
+        return users.scalars().first()
+
     async def create(self,telegram_id) -> User:
         new_user = User(telegram_id=telegram_id)
         self.db.add(new_user)

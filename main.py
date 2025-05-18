@@ -6,6 +6,7 @@ from aiogram import Bot, Dispatcher
 from app.broadcast import setup_scheduler
 from app.config_data.config import Config, load_config
 from app.handlers import router
+from app.keyboard.menu import set_main_menu
 from app.middleware.db import DbSessionMiddleware
 
 logger = logging.getLogger(__name__)
@@ -25,7 +26,9 @@ async def main():
     dp.callback_query.middleware(DbSessionMiddleware())
     # Регистриуем роутеры в диспетчере
     dp.include_router(router)
-    setup_scheduler()
+    # setup_scheduler(bot)
+
+    await set_main_menu(bot)
 
 
     await dp.start_polling(bot)
