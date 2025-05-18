@@ -11,5 +11,7 @@ class User(Base):
     __tablename__ = 'users'
 
     telegram_id: Mapped[int] = mapped_column(Integer, unique=True,primary_key=True, nullable=False)
+    access_token : Mapped[str] = mapped_column(String, nullable=True)
+    refresh_token : Mapped[str] = mapped_column(String, nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
     updated_at: Mapped[datetime] = mapped_column(DateTime, onupdate=datetime.utcnow, nullable=True)

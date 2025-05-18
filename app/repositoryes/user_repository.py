@@ -32,8 +32,12 @@ class UserRepository(TemplateRepository):
 
         return new_user
 
-    async def update(self, user_id: int):
-        user = await self.get(user_id)
+    async def save_tokens(self, telegram_id: int, access_token: str, refresh_token: str):
+        user = await self.get(telegram_id)
+
+        user.access_token = access_token
+        user.refresh_token = refresh_token
+
         await self.db.commit()
         await self.db.refresh(user)
         return user

@@ -16,11 +16,11 @@ ikb: InlineKeyboardMarkup = InlineKeyboardMarkup(
                      [InlineKeyboardButton(text='Другое фото',callback_data='Другое фото')],
                      [InlineKeyboardButton(text='Главное меню',callback_data='Главное меню')]])
 
-def create_inline_kb(tempStr : str) -> InlineKeyboardMarkup:
+def create_inline_kb(temp : list) -> InlineKeyboardMarkup:
     keyboard : list[list[InlineKeyboardButton]] = [[],[],[],[],[]]
     counter = 1
-    for i in tempStr:
-        keyboard[counter // 8].append(InlineKeyboardButton(text=i,callback_data='for_wordly'))
+    for i in temp:
+        keyboard[counter // 8].append(InlineKeyboardButton(text=i,callback_data=i))
         counter+=1
 
     return InlineKeyboardMarkup(inline_keyboard=keyboard)

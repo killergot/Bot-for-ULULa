@@ -2,6 +2,8 @@ import asyncio
 import logging
 
 from aiogram import Bot, Dispatcher
+
+from app.broadcast import setup_scheduler
 from app.config_data.config import Config, load_config
 from app.handlers import router
 from app.middleware.db import DbSessionMiddleware
@@ -20,8 +22,10 @@ async def main():
     bot = Bot(token=config.tg_bot.token)
     dp = Dispatcher()
     dp.message.middleware(DbSessionMiddleware())
+    dp.callback_query.middleware(DbSessionMiddleware())
     # Регистриуем роутеры в диспетчере
     dp.include_router(router)
+    setup_scheduler()
 
 
     await dp.start_polling(bot)
