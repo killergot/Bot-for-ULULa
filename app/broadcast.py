@@ -18,7 +18,7 @@ async def send_broadcast(user_ids, bot: Bot, session: AsyncSession, message: Mes
     text = "⏰ Ежечасная рассылка"
     for user_id in user_ids:
         try:
-            await bot.send_message(user_id, text)
+
         except Exception as e:
             logger.warning(f"Не удалось отправить сообщение {user_id}: {e}")
 
