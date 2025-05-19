@@ -29,7 +29,7 @@ async def send_broadcast(bot: Bot):
 
     # Установим временную зону и получим текущие время и интервал
     tz = pytz.timezone("Europe/Moscow")
-    now = datetime.now(tz) - timedelta(hours=1)
+    now = datetime.now(tz)
     interval_end = now + timedelta(hours=1)
 
     current_day = now.strftime("%A").lower()
