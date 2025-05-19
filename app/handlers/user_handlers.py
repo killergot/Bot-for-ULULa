@@ -7,9 +7,13 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from functools import lru_cache
 
+from sqlalchemy.testing.config import test_schema
+
 from app.api import ApiClient
+from app.broadcast import send_broadcast
 from app.lexicon.lexicon import LEXICON_RU, LEXICON_COMMANDS_RU
 from app.keyboard.keyboard import kb_main
+from app.repositoryes.group_repository import GroupRepository
 from app.repositoryes.user_repository import UserRepository
 router = Router()
 
@@ -108,6 +112,24 @@ def format_tasks(tasks):
 
     return formatted
 
+
+def format_users(users):
+    if not users:
+        return "👥 В группе пока нет пользователей."
+
+    formatted = "👥 *Список участников группы:*\n"
+
+    for i, user in enumerate(users, start=1):
+        name = user.get("nickname") or user.get("full_name", "Без имени")
+        email = user.get("email", "—")
+        telegram = user.get("telegram")
+
+        formatted += f"\n*{i}. {name}*\n📧 {email}\n"
+        if telegram and telegram.strip().lower() != "string":
+            formatted += f" @{telegram}\n"
+
+    return formatted
+
 @router.message(Command("help"))
 async def login_handler(message: Message):
     await message.answer(text=format_help(LEXICON_COMMANDS_RU),
@@ -129,7 +151,20 @@ async def login_handler(message: Message, db_session: AsyncSession):
     except Exception as e:
         await message.answer("Ошибка при получении профиля.")
 
-
+@router.message(Command("my_group"))
+async def login_handler(message: Message, db_session: AsyncSession):
+    client = ApiClient(
+        telegram_id=message.from_user.id,
+        session=db_session,
+    )
+    try:
+        resp = await client.get("/students/get_my_groupmates")
+        profile = resp.json()
+        await message.answer(format_users(profile),
+                             parse_mode="Markdown")
+        await message.delete()
+    except Exception as e:
+        await message.answer("Ошибка при получении профиля.")
 
 
 @router.message(Command("login"))
@@ -170,6 +205,7 @@ async def handle_2fa_code(message: Message, state: FSMContext, db_session: Async
 
     try:
         tokens = await verify_2fa(code, temp_token)
+
         access_token = tokens["access_token"]
         refresh_token = tokens["refresh_token"]
 
@@ -182,7 +218,26 @@ async def handle_2fa_code(message: Message, state: FSMContext, db_session: Async
         )
 
         await db_session.commit()
-        await message.answer("✅ Успешный вход в систему!")
+
+        client = ApiClient(
+            telegram_id=message.from_user.id,
+            session=db_session,
+        )
+        resp = await client.get("/students/me")
+        profile = resp.json()
+        if not profile:
+            await user_repo.delete(message.from_user.id)
+            await db_session.commit()
+            await message.answer("Вы не являетесь студентом, зарегистрируйтесь на сайте и приходите")
+        else:
+            group_repo = GroupRepository(db_session)
+            user = await user_repo.get(message.from_user.id)
+            group = await group_repo.get_id(profile["group_number"])
+            if not group:
+                group = await group_repo.create(profile["group_number"])
+            user.group_id = group.id
+            await db_session.commit()
+            await message.answer("✅ Успешный вход в систему!")
     except httpx.HTTPStatusError as e:
         await message.answer("❌ Неверный код или ошибка при входе.")
     finally:
@@ -190,16 +245,9 @@ async def handle_2fa_code(message: Message, state: FSMContext, db_session: Async
 
 
 @router.message(Command('test'))
-async def get_email(message: Message, db_session: AsyncSession):
-    client = ApiClient(
-        telegram_id=message.from_user.id,
-        session=db_session,
-    )
-    try:
-        resp = await client.get("/users/get_me")
-        profile = resp.json()
-        await message.answer(f"👤 Профиль:{profile}")
-    except Exception as e:
-        await message.answer("Ошибка при получении профиля.")
+async def get_email(message: Message, db_session: AsyncSession,
+                    bot: Bot):
+    await send_broadcast(bot)
+
 
 

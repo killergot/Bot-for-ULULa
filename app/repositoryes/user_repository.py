@@ -39,12 +39,13 @@ class UserRepository(TemplateRepository):
 
     async def save_tokens(self, telegram_id: int, access_token: str, refresh_token: str):
         user = await self.get(telegram_id)
+        if not user:
+            user = await self.create(telegram_id=telegram_id)
 
         user.access_token = access_token
         user.refresh_token = refresh_token
 
         await self.db.commit()
-        await self.db.refresh(user)
         return user
 
     async def delete(self, user_id: int) -> bool:
