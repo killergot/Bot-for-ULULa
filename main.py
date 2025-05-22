@@ -26,7 +26,7 @@ async def main():
     dp.callback_query.middleware(DbSessionMiddleware())
     # Регистриуем роутеры в диспетчере
     dp.include_router(router)
-    # setup_scheduler(bot)
+    setup_scheduler(bot)
 
     await set_main_menu(bot)
 

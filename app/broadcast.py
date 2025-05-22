@@ -78,7 +78,7 @@ async def send_broadcast(bot: Bot):
 # === Настройка планировщика ===
 def setup_scheduler(bot):
     # Каждые часы с 7 до 20 включительно
-    scheduler.add_job(send_broadcast, CronTrigger(hour="7-20", minute="*/10"))
+    scheduler.add_job(send_broadcast, CronTrigger(hour="7-20", minute="*/10"), [bot])
     scheduler.start()
 
 
