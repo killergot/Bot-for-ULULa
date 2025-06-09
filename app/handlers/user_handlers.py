@@ -192,8 +192,9 @@ async def get_password(message: Message, state: FSMContext):
         await state.update_data(temp_token=temp_token)
         await message.answer("Введите 2FA код:")
         await state.set_state(LoginStates.code)
-    except Exception:
+    except Exception as e:
         await message.answer("Ошибка логина")
+        print(e)
         await state.clear()
 
 
