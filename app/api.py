@@ -5,7 +5,7 @@ from app.repositoryes.user_repository import UserRepository
 
 
 class ApiClient:
-    def __init__(self, telegram_id: int, session: AsyncSession, base_url: str = "http://http://185.95.159.198/api"):
+    def __init__(self, telegram_id: int, session: AsyncSession, base_url: str = "http://185.95.159.198/api"):
         self.telegram_id = telegram_id
         self.base_url = base_url
         self.repo = UserRepository(session)

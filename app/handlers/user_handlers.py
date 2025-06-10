@@ -19,7 +19,7 @@ router = Router()
 
 import httpx
 
-API_URL = "http://localhost:8000/auth"
+API_URL = "http://185.95.159.198/api/auth"
 
 async def login_user(email: str, password: str) -> dict:
     async with httpx.AsyncClient() as client:
